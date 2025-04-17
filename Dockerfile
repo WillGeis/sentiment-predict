@@ -8,6 +8,7 @@ WORKDIR /app
 COPY programRunner.py .
 COPY stockAPIGetter.py .
 COPY topStockDisplayer.py .
+COPY stockCSVDownloader.py .
 
 # Copy the CSV file into the container
 COPY stock-tickers.csv /app/stock-tickers.csv

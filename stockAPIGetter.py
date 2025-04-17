@@ -1,47 +1,47 @@
 import requests
 import csv
+import os
 
 class stockAPIGetter:
-    def __init__(self, tickers_filename="stock-tickers.csv"):
+    def __init__(self, tickers_filename="stock-tickers.csv", output_filename="stocks.csv"):
         print("ApiGetter initialized")
-        self.tickers_filename = tickers_filename  # CSV file with stock symbols
+        self.tickers_filename = tickers_filename
+        self.output_filename = output_filename
+        self.header_written = os.path.exists(self.output_filename)  # Check if file already exists
 
     def get_tickers_from_csv(self):
-        """Read ticker symbols from CSV."""
         tickers = []
         try:
             with open(self.tickers_filename, mode="r") as file:
                 reader = csv.DictReader(file)
                 for row in reader:
-                    tickers.append(row['Symbol'])  # Assuming the column name is 'Symbol'
+                    tickers.append(row['Symbol'])
         except FileNotFoundError:
             print(f"Error: File '{self.tickers_filename}' not found.")
         return tickers
 
-    def fetch_and_save_data(self, symbol):
-        """Fetch stock data for a specific symbol and save it to CSV."""
+    def fetch_and_append_data(self, symbol):
         url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=5min&apikey=GKZD4Y2REDV5QML2'
-
-        # Make the API call
         response = requests.get(url)
         data = response.json()
 
-        # Get the symbol from metadata
         meta_data = data.get("Meta Data", {})
         symbol = meta_data.get("2. Symbol", "UNKNOWN")
 
-        # Parse and extract time series data
         time_series = data.get("Time Series (5min)")
         if not time_series:
             print(f"Error: No time series data found for {symbol}. Skipping...")
             return
 
-        # Write to CSV for each symbol
-        with open(f"{symbol}_stock_data.csv", mode="w", newline="") as csv_file:
+        write_header = not self.header_written
+        with open(self.output_filename, mode="a", newline="") as csv_file:
             fieldnames = ["ticker", "timestamp", "open", "high", "low", "close", "volume"]
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 
-            writer.writeheader()
+            if write_header:
+                writer.writeheader()
+                self.header_written = True
+
             for timestamp, values in time_series.items():
                 writer.writerow({
                     "ticker": symbol,
@@ -56,10 +56,16 @@ class stockAPIGetter:
     def run(self):
         print("Running ApiGetter...")
 
-        # Get list of tickers from CSV
         tickers = self.get_tickers_from_csv()
+        if not tickers:
+            print("No tickers to process.")
+            return
 
-        # For each ticker, fetch and save the stock data
+        # Clear existing file if needed
+        if os.path.exists(self.output_filename):
+            os.remove(self.output_filename)
+            self.header_written = False
+
         for symbol in tickers:
             print(f"Fetching data for {symbol}...")
-            self.fetch_and_save_data(symbol)
+            self.fetch_and_append_data(symbol)
