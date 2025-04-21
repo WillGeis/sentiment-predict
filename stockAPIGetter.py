@@ -1,6 +1,7 @@
 import requests
 import csv
 import os
+import time
 
 class stockAPIGetter:
     def __init__(self, tickers_filename="stock-tickers.csv", output_filename="stocks.csv"):
@@ -21,16 +22,33 @@ class stockAPIGetter:
         return tickers
 
     def fetch_and_append_data(self, symbol):
-        url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=5min&apikey=GKZD4Y2REDV5QML2'
-        response = requests.get(url)
-        data = response.json()
+        url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=30min&apikey=GKZD4Y2REDV5QML2'
+
+        max_retries = 5
+        retry_delay = 65  # seconds, a bit over 1 minute to be safe
+
+        for attempt in range(max_retries):
+            response = requests.get(url)
+            data = response.json()
+
+            # Check if we got rate-limited or there's some other error
+            if "Meta Data" not in data or "Time Series (30min)" not in data:
+                print(f"[Attempt {attempt + 1}] API limit hit or bad response. Waiting {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                break
+        else:
+            print(f"Failed to fetch data for {symbol} after {max_retries} retries.")
+            return
+
+        print(f"Fetched data for: {data['Meta Data'].get('2. Symbol', 'UNKNOWN')}")
 
         meta_data = data.get("Meta Data", {})
         symbol = meta_data.get("2. Symbol", "UNKNOWN")
+        time_series = data.get("Time Series (30min)")
 
-        time_series = data.get("Time Series (5min)")
         if not time_series:
-            print(f"Error: No time series data found for {symbol}. Skipping...")
+            print(f"No time series data found for {symbol}.")
             return
 
         write_header = not self.header_written
