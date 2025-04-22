@@ -25,7 +25,7 @@ class stockAPIGetter:
         url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=30min&apikey=GKZD4Y2REDV5QML2'
 
         max_retries = 5
-        retry_delay = 65  # seconds, a bit over 1 minute to be safe
+        retry_delay = 5400  # seconds, 1.5 hours
 
         for attempt in range(max_retries):
             response = requests.get(url)
@@ -33,7 +33,7 @@ class stockAPIGetter:
 
             # Check if we got rate-limited or there's some other error
             if "Meta Data" not in data or "Time Series (30min)" not in data:
-                print(f"[Attempt {attempt + 1}] API limit hit or bad response. Waiting {retry_delay} seconds...")
+                print(f"[Attempt {attempt + 1}] API limit hit or bad response. Waiting {retry_delay / 60} minutes...")
                 time.sleep(retry_delay)
             else:
                 break
