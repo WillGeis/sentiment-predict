@@ -1,7 +1,6 @@
 using CSV
 using DataFrames
 using Statistics
-using JSON
 
 function load_stock_data(filename::String)
     println("Loading data from $filename...")
@@ -25,23 +24,14 @@ function compute_returns(df::DataFrame)
     return sort(result, :return, rev=true)  # sort by returns
 end
 
-function output_json(data::DataFrame, filename::String)
-    # DF => Dict for JSON conversion
-    json_data = Dict("stocks" => [])
-    for row in eachrow(data)
-        push!(json_data["stocks"], Dict("ticker" => row[:ticker], "return" => row[:return]))
-    end
-
-    # /W to json
-    open(filename, "w") do f
-        JSON.print(f, json_data)
-    end
+function output_csv(data::DataFrame, filename::String)
+    CSV.write(filename, data)
     println("Data written to $filename")
 end
 
 function main()
     filename = "stocks.csv"
-    output_file = "top_stocks.json"  # name file
+    output_file = "top_stocks.csv"  # now outputs to CSV
 
     if !isfile(filename)
         println("File $filename not found.")
@@ -52,9 +42,9 @@ function main()
     returns_df = compute_returns(df)
     
     println("Top performing stocks:")
-    show(first(returns_df, 5))  # display for debugginig
+    show(first(returns_df, 5))  # display for debugging
 
-    output_json(returns_df, output_file)
+    output_csv(returns_df, output_file)
 end
 
 main()

@@ -27,6 +27,9 @@ RUN wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-$JULIA_V
     ln -s /opt/julia-$JULIA_VERSION/bin/julia /usr/local/bin/julia && \
     rm julia-$JULIA_VERSION-linux-x86_64.tar.gz
 
+# Install Julia packages required for the script
+RUN julia -e 'using Pkg; Pkg.add("CSV"); Pkg.add("DataFrames"); Pkg.add("JSON"); Pkg.add("Statistics");'
+
 # Install Python dependencies quietly
 RUN pip install --no-cache-dir --quiet requests
 
@@ -41,5 +44,8 @@ COPY stock_optimizer.jl /app/stock_optimizer.jl
 # Optional: compile Python bytecode (quietly)
 RUN python -m compileall -q .
 
-# Default entrypoint
+# Run Julia script (optional: make sure to include necessary dependencies in the script)
+RUN julia /app/stock_optimizer.jl
+
+# Default entrypoint (ensure it's the Python entry point for your app)
 CMD ["python", "programRunner.py"]
