@@ -1,11 +1,15 @@
-# Base image with Python
-FROM python:3.11-slim
+# Use a more secure base image
+FROM python:3.13-slim
+
+# Prevent interactive prompts and reduce output
+ENV DEBIAN_FRONTEND=noninteractive
+ENV JULIA_VERSION=1.10.2
 
 # Set working directory
 WORKDIR /app
 
-# Install Julia dependencies
-RUN apt-get update && apt-get install -y \
+# Update & install quietly with fewer layers
+RUN apt-get update -qq && apt-get install -y --no-install-recommends \
     wget \
     gnupg \
     ca-certificates \
@@ -17,30 +21,25 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install Julia
-ENV JULIA_VERSION=1.10.2
-RUN wget https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-$JULIA_VERSION-linux-x86_64.tar.gz && \
-    tar -xvzf julia-$JULIA_VERSION-linux-x86_64.tar.gz && \
+RUN wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.10/julia-$JULIA_VERSION-linux-x86_64.tar.gz && \
+    tar -xzf julia-$JULIA_VERSION-linux-x86_64.tar.gz && \
     mv julia-$JULIA_VERSION /opt/ && \
     ln -s /opt/julia-$JULIA_VERSION/bin/julia /usr/local/bin/julia && \
     rm julia-$JULIA_VERSION-linux-x86_64.tar.gz
 
-# Install Python dependency
-RUN pip install requests
+# Install Python dependencies quietly
+RUN pip install --no-cache-dir --quiet requests
 
-# Copy your Python source files
+# Copy source files
 COPY programRunner.py . 
 COPY stockAPIGetter.py . 
 COPY topStockDisplayer.py . 
 COPY stockCSVDownloader.py . 
-
-# Copy your CSV
 COPY stock-tickers.csv /app/stock-tickers.csv
+COPY stock_optimizer.jl /app/stock_optimizer.jl
 
-# Copy the Julia optimizer script from the 'julia' folder
-COPY julia/stock_optimizer.jl /app/stock_optimizer.jl
+# Optional: compile Python bytecode (quietly)
+RUN python -m compileall -q .
 
-# Optional: compile Python bytecode
-RUN python -m compileall .
-
-# Default to running your Python entrypoint
+# Default entrypoint
 CMD ["python", "programRunner.py"]

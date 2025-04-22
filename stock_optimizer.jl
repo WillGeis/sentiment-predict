@@ -10,7 +10,7 @@ end
 
 function compute_returns(df::DataFrame)
     grouped = groupby(df, :ticker)  # group by ticker
-    result = DataFrame(ticker=String[], return=Float64[])  # new dataframe for results
+    result = DataFrame(:ticker => String[], :return => Float64[])
     
     for g in grouped
         sorted = sort(g, :timestamp)
