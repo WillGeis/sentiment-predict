@@ -37,7 +37,7 @@ COPY stockCSVDownloader.py .
 COPY stock-tickers.csv /app/stock-tickers.csv
 
 # Copy the Julia optimizer script from the 'julia' folder
-COPY julia/stock_optimizer.jl /app/stock_optimizer.jl
+COPY stock_optimizer.jl /app/stock_optimizer.jl
 
 # Optional: compile Python bytecode
 RUN python -m compileall .

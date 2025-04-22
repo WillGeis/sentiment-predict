@@ -21,7 +21,7 @@ if errorlevel 1 (
 )
 
 echo Building Docker image...
-docker build -t %IMAGE_NAME% .
+docker build --no-cache -t %IMAGE_NAME% .
 
 echo Checking for existing container...
 docker ps -q -f name=%CONTAINER_NAME% >nul
