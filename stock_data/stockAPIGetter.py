@@ -22,19 +22,30 @@ class stockAPIGetter:
         return tickers
 
     def fetch_and_append_data(self, symbol):
-        url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=30min&apikey=GKZD4Y2REDV5QML2'
+        key1 = f'GKZD4Y2REDV5QML2'
+        key2 = f''
+        key3 = f''
+        key4 = f''
+        key5 = f''
+        keys = [key1, key2, key3, key4, key5]
+        
 
         max_retries = 5
-        retry_delay = 5400  # seconds, 1.5 hours
+        retry_delay = 1800  # seconds, .5 hours
 
         for attempt in range(max_retries):
-            response = requests.get(url)
-            data = response.json()
-
-            # Check if we got rate-limited or there's some other error
-            if "Meta Data" not in data or "Time Series (30min)" not in data:
+            for i in range(4):
+                url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=30min&apikey={keys[i]}'
+                response = requests.get(url)
+                data = response.json()
+                if "Meta Data" not in data or "Time Series (30min)" not in data: # Check if key is found
+                    print(f"[Key {i + 1} ({keys[i]})] used up. trying Key {i + 2} ({keys[i + 1]})...")
+            
+            if "Meta Data" not in data or "Time Series (30min)" not in data: # Check if we got rate-limited or there's some other error
                 print(f"[Attempt {attempt + 1}] API limit hit or bad response. Waiting {retry_delay / 60} minutes...")
-                time.sleep(retry_delay)
+                time.sleep(retry_delay)        
+            
+            
             else:
                 break
         else:
