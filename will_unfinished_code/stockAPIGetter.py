@@ -2,13 +2,16 @@ import requests
 import csv
 import os
 import time
+from stockCSVDownloader import stockCSVDownloader
+from lastStockPrinter import lastStockPrinter
 
 class stockAPIGetter:
-    def __init__(self, tickers_filename="stock-tickers.csv", output_filename="stocks.csv"):
+    def __init__(self, count, tickers_filename="stock-tickers.csv", output_filename="stocks.csv"):
         print("ApiGetter initialized")
         self.tickers_filename = tickers_filename
         self.output_filename = output_filename
-        self.header_written = os.path.exists(self.output_filename)  # Check if file already exists
+        self.count = count
+        self.header_written = os.path.exists(self.output_filename)
 
     def get_tickers_from_csv(self):
         tickers = []
@@ -22,41 +25,46 @@ class stockAPIGetter:
         return tickers
 
     def fetch_and_append_data(self, symbol):
-        key1 = f'GKZD4Y2REDV5QML2'
-        key2 = f''
-        key3 = f''
-        key4 = f''
-        key5 = f''
-        keys = [key1, key2, key3, key4, key5]
-        
+        keys = [
+            'GKZD4Y2REDV5QML2', 'FGU2NZ3JIXC9N51I', 'RW09WWS3J0PXPMLJ',
+            'OSGL3STEDHN3TZ7M', 'WKF2RX5IU1KSHCQN', 'AQD9B226KSTUFE0Z',
+            'O9FV66INHEJGYUFB', 'SND0MRNKPX7TFFZY', 'EW4625MPD4TG50QI',
+            'RXA8VR7MBAW63KOI'
+        ]
 
         max_retries = 5
-        retry_delay = 1800  # seconds, .5 hours
+        retry_delay = 900  # 15 minutes
 
         for attempt in range(max_retries):
-            for i in range(4):
-                url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=30min&apikey={keys[i]}'
+            for i, key in enumerate(keys):
+                url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=30min&apikey={key}'
                 response = requests.get(url)
                 data = response.json()
-                if "Meta Data" not in data or "Time Series (30min)" not in data: # Check if key is found
-                    print(f"[Key {i + 1} ({keys[i]})] used up. trying Key {i + 2} ({keys[i + 1]})...")
-            
-            if "Meta Data" not in data or "Time Series (30min)" not in data: # Check if we got rate-limited or there's some other error
-                print(f"[Attempt {attempt + 1}] API limit hit or bad response. Waiting {retry_delay / 60} minutes...")
-                time.sleep(retry_delay)        
-            
-            
+
+                if "Meta Data" in data and "Time Series (30min)" in data:
+                    print(f"[Key {i + 1}] Success for {symbol}.")
+                    break
+                else:
+                    print(f"[Key {i + 1}] failed or rate-limited. Trying next key...")
+
             else:
-                break
+                print(f"[Attempt {attempt + 1}] All keys failed. Waiting {retry_delay / 60} minutes...")
+                if attempt == 3:
+                    downloader = stockCSVDownloader()
+                    downloader.move_to_downloads("stocks.csv")
+
+                    printer = lastStockPrinter()
+                    printer.move_last_stock_to_downloads(symbol, str(self.count))
+
+                time.sleep(retry_delay)
+                continue
+            break
         else:
             print(f"Failed to fetch data for {symbol} after {max_retries} retries.")
             return
 
         print(f"Fetched data for: {data['Meta Data'].get('2. Symbol', 'UNKNOWN')}")
-
-        meta_data = data.get("Meta Data", {})
-        symbol = meta_data.get("2. Symbol", "UNKNOWN")
-        time_series = data.get("Time Series (30min)")
+        time_series = data.get("Time Series (30min)", {})
 
         if not time_series:
             print(f"No time series data found for {symbol}.")
@@ -84,13 +92,11 @@ class stockAPIGetter:
 
     def run(self):
         print("Running ApiGetter...")
-
         tickers = self.get_tickers_from_csv()
         if not tickers:
             print("No tickers to process.")
             return
 
-        # Clear existing file if needed
         if os.path.exists(self.output_filename):
             os.remove(self.output_filename)
             self.header_written = False

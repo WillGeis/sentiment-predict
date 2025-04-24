@@ -1,6 +1,0 @@
-version: '3.8'
-services:
-  # Database service removed
-
-volumes:
-  # Volume definition removed since it's no longer needed
