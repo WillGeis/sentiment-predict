@@ -11,7 +11,7 @@ def main():
             display_top_stocks_by_volume()
 
             downloader = stockCSVDownloader()
-            downloader.move_to_downloads("stocks.csv")
+            downloader.move_to_downloads("stocks_" + count +".csv")
         except ValueError:
             print("Please enter a valid integer.")
 

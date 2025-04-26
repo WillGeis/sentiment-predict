@@ -55,6 +55,9 @@ class stockAPIGetter:
 
                     printer = lastStockPrinter()
                     printer.move_last_stock_to_downloads(symbol, str(self.count))
+                    continue
+                elif attempt == 4:
+                    time.sleep(retry_delay * 8)
 
                 time.sleep(retry_delay)
                 continue
