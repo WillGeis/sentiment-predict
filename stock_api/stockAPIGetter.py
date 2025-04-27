@@ -5,14 +5,20 @@ import time
 from stockCSVDownloader import stockCSVDownloader
 from lastStockPrinter import lastStockPrinter
 
+"""
+this class repeated queries to the api, I do not *think* it breaks any sort of TOS
+"""
 class stockAPIGetter:
-    def __init__(self, count, tickers_filename="stock-tickers.csv", output_filename="stocks.csv"):
+    def __init__(self, count, tickers_filename="stock-tickers.csv", output_filename="stocks.csv"): ## in and output calls
         print("ApiGetter initialized")
         self.tickers_filename = tickers_filename
         self.output_filename = output_filename
         self.count = count
         self.header_written = os.path.exists(self.output_filename)
 
+    """
+    stock ticker getters
+    """
     def get_tickers_from_csv(self):
         tickers = []
         try:
@@ -24,10 +30,14 @@ class stockAPIGetter:
             print(f"Error: File '{self.tickers_filename}' not found.")
         return tickers
 
+    """
+    attempts to contact and get good data back from the alphavantage api
+    """
     def fetch_and_append_data(self, symbol):
+        
         keys = [
             'GKZD4Y2REDV5QML2', 'FGU2NZ3JIXC9N51I', 'RW09WWS3J0PXPMLJ',
-            'OSGL3STEDHN3TZ7M', 'WKF2RX5IU1KSHCQN', 'AQD9B226KSTUFE0Z',
+            'OSGL3STEDHN3TZ7M', 'WKF2RX5IU1KSHCQN', 'AQD9B226KSTUFE0Z', # keys obtained by dubious means
             'O9FV66INHEJGYUFB', 'SND0MRNKPX7TFFZY', 'EW4625MPD4TG50QI',
             'RXA8VR7MBAW63KOI'
         ]
@@ -37,7 +47,7 @@ class stockAPIGetter:
 
         for attempt in range(max_retries):
             for i, key in enumerate(keys):
-                url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=30min&apikey={key}'
+                url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=30min&apikey={key}' ## url to alphavantage
                 response = requests.get(url)
                 data = response.json()
 
@@ -45,19 +55,19 @@ class stockAPIGetter:
                     print(f"[Key {i + 1}] Success for {symbol}.")
                     break
                 else:
-                    print(f"[Key {i + 1}] failed or rate-limited. Trying next key...")
+                    print(f"[Key {i + 1}] failed or rate-limited. Trying next key...") ## catch if they are limiting my rates (although I am starting to think it is by static ip)
 
             else:
                 print(f"[Attempt {attempt + 1}] All keys failed. Waiting {retry_delay / 60} minutes...")
-                if attempt == 3:
+                if attempt == 3: # ratchet catch to get all the data I could glean so far, will overwrite if I get more data
                     downloader = stockCSVDownloader()
-                    downloader.move_to_downloads("stocks.csv")
+                    downloader.move_to_downloads("stocks.csv") #actual downloader
 
                     printer = lastStockPrinter()
                     printer.move_last_stock_to_downloads(symbol, str(self.count))
                     continue
                 elif attempt == 4:
-                    time.sleep(retry_delay * 8)
+                    time.sleep(retry_delay * 8) #long sleeper so I can afk this
 
                 time.sleep(retry_delay)
                 continue
@@ -70,12 +80,12 @@ class stockAPIGetter:
         time_series = data.get("Time Series (30min)", {})
 
         if not time_series:
-            print(f"No time series data found for {symbol}.")
+            print(f"No time series data found for {symbol}.") #bad data catch
             return
 
         write_header = not self.header_written
         with open(self.output_filename, mode="a", newline="") as csv_file:
-            fieldnames = ["ticker", "timestamp", "open", "high", "low", "close", "volume"]
+            fieldnames = ["ticker", "timestamp", "open", "high", "low", "close", "volume"] # headers
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 
             if write_header:

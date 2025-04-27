@@ -1,5 +1,12 @@
 import os
 
+"""
+This acts as a "ratchet" that takes the last stock before the API makes its final timeout on one of my burner accounts, 
+
+CHANGE AFTER RUNNING, TIMES RUN:
+3
+"""
+
 class lastStockPrinter:
     def __init__(self):
         self.downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
