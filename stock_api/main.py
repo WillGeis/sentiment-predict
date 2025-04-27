@@ -1,5 +1,4 @@
 from programRunner import programRunner
-from topStockDisplayer import display_top_stocks_by_volume
 from stockCSVDownloader import stockCSVDownloader
 
 """
@@ -11,7 +10,6 @@ def main():
             count = int(input("How many times have you run the API? ")) ## user prompt
             runner = programRunner(count)
             runner.run()
-            display_top_stocks_by_volume()
 
             downloader = stockCSVDownloader()
             downloader.move_to_downloads("stocks_" + count +".csv") #print to csv for ratcheted data
