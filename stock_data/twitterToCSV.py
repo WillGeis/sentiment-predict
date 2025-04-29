@@ -131,28 +131,43 @@ if __name__ == "__main__":
     
     # Define list of relevant accounts to monitor
     financial_accounts = [
-        "elonmusk",        # Elon Musk
-        "SecYellen",       # Treasury Secretary Janet Yellen
-        "federalreserve",  # Federal Reserve
-        "JoeBiden",        # President Biden
-        "WSJ",             # Wall Street Journal
+        "elonmusk",
+        "WarrenBuffett",
+        "SecYellen",
+        "FederalReserve",
+        "BillAckman",
+        "kevinolearytv",
+        "CathieDWood",
+        "jimcramer",
+        "mcuban",
+        "michaeljburry",
+        "GaryGensler",
+        "theRealKiyosaki",
+        "RayDalio",
+        "JPMorganChase",
+        "BlackRock",
+        "woonomic",
+        "realDonaldTrump",
+        "chamath",
+        "brian_armstrong",
+        "PeterSchiff"
     ]
     
     # Collect tweets and export to CSV
     csv_path = exporter.collect_and_export(
         accounts=financial_accounts,
-        count_per_account=10,
+        count_per_account=20,
         filename="financial_tweets.csv"
     )
     
     print(f"CSV file created at: {csv_path}")
     
     # Example of searching for specific keywords and exporting results
-    keyword_csv = exporter.export_search_results(
-        username="elonmusk",
-        keyword="economy",
-        count=5,
-        filename="elon_economy_tweets.csv"
-    )
+    # keyword_csv = exporter.export_search_results(
+    #     username="elonmusk",
+    #     keyword="economy",
+    #     count=5,
+    #     filename="elon_economy_tweets.csv"
+    # )
     
-    print(f"Keyword search CSV created at: {keyword_csv}")
+    # print(f"Keyword search CSV created at: {keyword_csv}")

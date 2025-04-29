@@ -1,0 +1,3 @@
+Total tweets processed: 329
+Total tokens used (estimate): 295050
+Total processing time: 14.08 minutes
