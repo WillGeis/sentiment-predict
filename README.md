@@ -1,7 +1,3 @@
 # sentiment-predict
 
-1) this optimizer works off of a few things that you will need before you can actually run it:
-
- - Julia and dependancies
- - Python
- - Docker Desktop
+1) To access this entire project open the final_report folder and everything can be found within the sentiment_predictive_stock_trader.ipynb 
